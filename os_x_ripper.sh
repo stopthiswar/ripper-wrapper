@@ -126,6 +126,9 @@ case $mode in
     check_vpn_status
     ripper_start
     ;;
+  vpn_status)
+    check_vpn_status
+    ;;
   *)
     echo "Wrong mode"
     exit 1
